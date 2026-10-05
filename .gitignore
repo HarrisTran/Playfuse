@@ -1,0 +1,22 @@
+/tmp
+/out-tsc
+
+# Build output
+/dist
+
+# Dependencies
+/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/.pnp
+.pnp.js
+
+# Test data & personal notes (kept local only)
+/fixtures
+/docs/notes
+
+# OS / IDE
+.DS_Store
+.vscode/*
+.idea/workspace.xml

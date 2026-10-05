@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    /* Target & Environment */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    /* Emit Rules — file này chỉ để typecheck (src + tests); build dùng tsconfig.build.json */
+    "noEmit": true,
+
+    /* Strict Type-Checking Rules */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+
+    /* Module & Interop */
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*",
+    "tests/**/*"
+  ],
+  "exclude": [
+    "src/runtime",
+    "node_modules",
+    "dist",
+    "fixtures"
+  ]
+}
