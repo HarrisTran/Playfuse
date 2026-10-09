@@ -1,5 +1,5 @@
-import { InputError } from '../input/errors.js';
-import type { VirtualFS } from '../vfs.js';
+import {InputError} from '../input/errors.js';
+import type {VirtualFS} from '../vfs.js';
 
 export interface ScannedProject {
   readonly html: string;
@@ -53,7 +53,7 @@ export function scanProject(_vfs: VirtualFS): ScannedProject {
     throw new InputError('NOT_FOUND', 'Không tìm thấy file settings.json');
   }
 
-  let result: ScannedProject = {
+  return {
     html: htmlPath,
     stylesheets: stylesheets,
     engineScripts: engineScripts,
@@ -64,5 +64,4 @@ export function scanProject(_vfs: VirtualFS): ScannedProject {
     },
     assets: assets,
   };
-  return result;
 }
