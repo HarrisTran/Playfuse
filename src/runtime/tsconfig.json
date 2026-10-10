@@ -4,6 +4,6 @@
     "lib": ["ES2022", "DOM"],
     "noEmit": true
   },
-  "include": ["./**/*"],
-  "exclude": ["**/*.test.ts"]
+  "include": ["./**/*", "../../tests/runtime/**/*"],
+  "exclude": []
 }

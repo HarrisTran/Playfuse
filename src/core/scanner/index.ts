@@ -37,13 +37,6 @@ export function scanProject(_vfs: VirtualFS): ScannedProject {
       importMap = p;
     } else if (p.includes('polyfills.bundle') || p.includes('system.bundle')) {
       engineScripts.push(p);
-    } else if (
-      (p.startsWith('index') && p.endsWith('.js')) ||
-      (p.startsWith('application') && p.endsWith('.js')) ||
-      p.startsWith('cocos-js/') ||
-      p.startsWith('src/chunks/')
-    ) {
-      gameScripts.push(p);
     } else {
       assets.push(p);
     }
@@ -57,7 +50,8 @@ export function scanProject(_vfs: VirtualFS): ScannedProject {
     html: htmlPath,
     stylesheets: stylesheets,
     engineScripts: engineScripts,
-    gameScripts: gameScripts,
+    gameScripts: [], // gameScripts is now empty, they are handled as assets
+
     configs: {
       settings: settings,
       importMap: importMap

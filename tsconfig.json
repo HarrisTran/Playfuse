@@ -25,6 +25,7 @@
   ],
   "exclude": [
     "src/runtime",
+    "tests/runtime",
     "node_modules",
     "dist",
     "fixtures"
