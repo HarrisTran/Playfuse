@@ -47,10 +47,9 @@ describe('Scanner (Phân loại tài nguyên)', () => {
       expect(scanned.engineScripts.some((f) => f.includes('polyfills'))).toBe(true);
       expect(scanned.engineScripts.some((f) => f.includes('system.bundle'))).toBe(true);
 
-      // 5. Game Scripts
-      expect(scanned.gameScripts.some((f) => f.startsWith('index'))).toBe(true);
-      expect(scanned.gameScripts.some((f) => f.startsWith('application'))).toBe(true);
-      expect(scanned.gameScripts.some((f) => f.includes('cocos-js/cc'))).toBe(true);
+      // 5. Assets (bao gồm application, cc.js, ảnh, audio, fonts)
+      expect(scanned.assets.some((f) => f.startsWith('application'))).toBe(true);
+      expect(scanned.assets.some((f) => f.includes('cocos-js/cc'))).toBe(true);
 
       // 6. Assets
       // Phải chứa ảnh, âm thanh mp3, effect.bin và các json trong assets/

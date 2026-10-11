@@ -81,4 +81,18 @@ describe('HTML Injector', () => {
 
     expect(result).toContain('window.__assetsMap__ = {"test.png":"data:image/png;base64,123"};');
   });
+
+  it('nhúng chuỗi zipBase64 vào closure khi được cung cấp', () => {
+    const result = injectHTML({
+      htmlContent: '<html><head></head><body></body></html>',
+      styles: [],
+      engineScripts: [],
+      gameScripts: [],
+      zipBase64: 'UEsDBBQAAAAIA...',
+      runtimeCode: 'console.log("runtime");',
+      importMapContent: '{}',
+    });
+
+    expect(result).toContain('var __a="UEsDBBQAAAAIA...";');
+  });
 });

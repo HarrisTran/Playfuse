@@ -1,4 +1,5 @@
 import type { VirtualFS } from "../vfs.js";
+import * as fflate from "fflate";
 
 export function getMimeType(filePath: string): string {
     const dotIndex = filePath.lastIndexOf('.');
@@ -65,8 +66,19 @@ export function buildAssetsMap(vfs: VirtualFS, assets: string[]): Record<string,
     return assetsMap;
 }
 
+export function buildZipPayload(vfs: VirtualFS, assets: string[]): string {
+    const filesToZip: Record<string, Uint8Array> = {};
+    for (const assetPath of assets) {
+        const bytes = vfs.get(assetPath);
+        if (bytes) {
+            filesToZip[assetPath] = bytes;
+        }
+    }
+    const zipped = fflate.zipSync(filesToZip, { level: 9 });
+    return uint8ArrayToBase64(zipped);
+}
 
-function uint8ArrayToBase64(bytes: Uint8Array): string {
+export function uint8ArrayToBase64(bytes: Uint8Array): string {
     const CHUNK = 0x8000; // 32768
     let binary = "";
     for (let i = 0; i < bytes.length; i += CHUNK) {

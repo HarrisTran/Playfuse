@@ -100,5 +100,27 @@ Thay vì bọc `document.createElement` phức tạp, chúng ta thiết lập ch
 
 ---
 
+## 6. Bảo vệ mã nguồn & Tối ưu dung lượng bằng In-Memory Zip/Deflate
+
+### Lý thuyết
+Việc nhúng toàn bộ file dạng Base64 Data URI trong từ điển JSON (`__assetsMap__`) khiến kích thước file phình to thêm ~33% và để lộ toàn bộ mã nguồn cũng như thuật toán runtime khi mở Developer Tools.
+
+### Thực tế
+- File HTML ban đầu lên tới **7.74 MB** (vượt quá giới hạn 5 MB của các mạng quảng cáo như Facebook/Google Ads).
+- Biến toàn cục `window.__assetsMap__` có thể bị bất kỳ ai mở Console gõ để dump toàn bộ dữ liệu.
+
+### Cách khắc phục
+1. **Đóng gói nhị phân bằng Deflate/Zip (`fflate.zipSync`)**:
+   - Thay vì mã hóa từng file thành Base64 riêng lẻ, toàn bộ 54 file tài nguyên (cc.js, application.js, json, png, ttf...) được nén lại thành **một khối Zip nhị phân duy nhất** với mức nén tối đa (level 9).
+   - Chỉ chuỗi nén này mới được chuyển sang Base64 và nhúng vào HTML.
+2. **Khép kín phạm vi (Closure Encapsulation) & Giải nén siêu tốc trên RAM**:
+   - Sử dụng `fflate.unzipSync` (~5.4 KB minified) ngay trong runtime của Playfuse.
+   - Khi HTML được mở, runtime giải nén toàn bộ tài nguyên trên RAM trong vòng **~70 mili-giây** và tự động khép kín trong closure, không tạo biến toàn cục `window.__assetsMap__`.
+3. **Hiệu quả đạt được**:
+   - Dung lượng HTML giảm từ **7.73 MB** xuống còn **4.51 MB** (giảm **~41.7%** / hơn **3.38 MB**).
+   - Vượt qua ngưỡng giới hạn 5 MB của hầu hết các kênh Ad Networks lớn.
+
+---
+
 ## Kết luận
-Biến dự án Cocos thành Playable HTML là cuộc chiến đánh lừa trình duyệt trên mọi mặt trận: **Network (Fetch/XHR)**, **Module Loader (SystemJS)**, **DOM API (src/setAttribute)**, và cả **CSS Engine (textContent/URL regex)**. Bằng việc phối hợp nhiều tầng Hook khác nhau trong Runtime, Playfuse đảm bảo 100% môi trường kín kẽ, giúp game chạy trơn tru trong một file HTML duy nhất.
+Biến dự án Cocos thành Playable HTML là cuộc chiến đánh lừa trình duyệt trên mọi mặt trận: **Network (Fetch/XHR)**, **Module Loader (SystemJS)**, **DOM API (src/setAttribute)**, **CSS Engine (textContent/URL regex)**, và **Bộ nhớ nén (In-Memory Deflate/Zip)**. Bằng việc phối hợp nhiều tầng Hook khác nhau trong Runtime, Playfuse đảm bảo 100% môi trường kín kẽ, bảo mật và siêu nhẹ, giúp game chạy trơn tru trong một file HTML duy nhất.

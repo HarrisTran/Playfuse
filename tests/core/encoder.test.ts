@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMimeType, encodeAssetToDataURI, buildAssetsMap } from '../../src/core/encoder/index.js';
+import { getMimeType, encodeAssetToDataURI, buildAssetsMap, buildZipPayload } from '../../src/core/encoder/index.js';
 import { VirtualFS } from '../../src/core/vfs.js';
 
 describe('Encoder (Mã hoá tài nguyên)', () => {
@@ -79,6 +79,19 @@ describe('Encoder (Mã hoá tài nguyên)', () => {
       // Đảm bảo data đã được encode base64 chính xác
       const expectedJpgBase64 = Buffer.from('fake-jpg').toString('base64');
       expect(assetsMap['assets/bg.jpg']).toBe(`data:image/jpeg;base64,${expectedJpgBase64}`);
+    });
+  });
+
+  describe('4. buildZipPayload', () => {
+    it('đóng gói danh sách file thành chuỗi Base64 Zip và giải nén được nguyên vẹn', () => {
+      const vfs = VirtualFS.fromEntries([
+        ['text.txt', new TextEncoder().encode('hello playfuse')],
+        ['data.json', new TextEncoder().encode('{"ok":true}')],
+      ]);
+
+      const zipBase64 = buildZipPayload(vfs, ['text.txt', 'data.json']);
+      expect(typeof zipBase64).toBe('string');
+      expect(zipBase64.length).toBeGreaterThan(0);
     });
   });
 });

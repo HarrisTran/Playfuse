@@ -1,5 +1,6 @@
 import { loadInput } from "../node/input.js";
-import { buildAssetsMap } from "./encoder/index.js";
+import { networkRegistry } from "./adapters/index.js";
+import { buildAssetsMap, buildZipPayload } from "./encoder/index.js";
 import { injectHTML } from "./injector/index.js";
 import { scanProject } from "./scanner/index.js";
 import fs from 'fs';
@@ -45,7 +46,7 @@ export interface PackOptions {
     debug?: boolean | undefined;
 }
 
-export async function packProject(inputDir: string, outputDir: string, runtimeCode: string, options?: PackOptions): Promise<string> {
+export async function packProject(inputDir: string, outputDir: string, runtimeCode: string, adsNetworkId: string = 'generic', options?: PackOptions): Promise<string> {
     const vfs = await loadInput(inputDir);
     const scanResult = scanProject(vfs);
     
@@ -54,7 +55,15 @@ export async function packProject(inputDir: string, outputDir: string, runtimeCo
         ...(scanResult.configs.settings ? [scanResult.configs.settings] : []),
         ...(scanResult.configs.importMap ? [scanResult.configs.importMap] : []),
     ];
-    const assetsMap = buildAssetsMap(vfs, assetFiles);
+    let assetsMap: Record<string, string> | undefined;
+    let zipBase64: string | undefined;
+
+    if (options?.debug) {
+        assetsMap = buildAssetsMap(vfs, assetFiles);
+    } else {
+        zipBase64 = buildZipPayload(vfs, assetFiles);
+    }
+
     const decode = (p: string) => new TextDecoder().decode(vfs.get(p)!);
 
     const htmlContent = decode(scanResult.html);
@@ -97,8 +106,10 @@ export async function packProject(inputDir: string, outputDir: string, runtimeCo
         engineScripts: engineScripts,
         gameScripts: gameScripts,
         assetsMap: assetsMap,
+        zipBase64: zipBase64,
         runtimeCode: runtimeCode,
         importMapContent: importMapContent,
+        adapter: networkRegistry.get(adsNetworkId),
         debug: options?.debug,
     });
 

@@ -1,11 +1,15 @@
+import type { AdNetworkAdapter } from "../adapters/types.js";
+
 export interface InjectorOptions {
     htmlContent: string;
     styles: string[];
     engineScripts: string[];
     gameScripts: string[];
-    assetsMap: Record<string,string>;
+    assetsMap?: Record<string,string> | undefined;
+    zipBase64?: string | undefined;
     runtimeCode: string;
     importMapContent: string;
+    adapter?: AdNetworkAdapter;
     debug?: boolean | undefined;
 }
 
@@ -27,14 +31,15 @@ export function injectHTML(options: InjectorOptions) : string {
     html = html.replace(/<script[^>]*src="[^"]*"[^>]*>\s*<\/script>/gi, '');
     
     let cssContent = `<style>${options.styles.join('')}</style>`;
-    html = html.replace('</head>', cssContent + '</head>');
+    let adapterHeadContent = options.adapter?.injectHead?.() || '';
+    html = html.replace('</head>', cssContent + adapterHeadContent + '</head>');
 
     let assetMapContent = '';
     let runtimeContent = '';
     let systemJsHook = '';
 
     if (options.debug) {
-        assetMapContent = `<script>window.__assetsMap__ = ${JSON.stringify(options.assetsMap)};</script>`;
+        assetMapContent = `<script>window.__assetsMap__ = ${JSON.stringify(options.assetsMap || {})};</script>`;
         runtimeContent = `<script>${options.runtimeCode}\nif(typeof __pf!=='undefined'&&__pf.init)__pf.init(window.__assetsMap__);</script>`;
         systemJsHook = `<script>
     (function(){
@@ -47,7 +52,8 @@ export function injectHTML(options: InjectorOptions) : string {
     })();
     </script>`;
     } else {
-        runtimeContent = `<script>(function(){var __a=${JSON.stringify(options.assetsMap)};${options.runtimeCode};if(typeof __pf!=='undefined'&&__pf.init)__pf.init(__a);})();</script>`;
+        const payload = options.zipBase64 ? JSON.stringify(options.zipBase64) : JSON.stringify(options.assetsMap || {});
+        runtimeContent = `<script>(function(){var __a=${payload};${options.runtimeCode};if(typeof __pf!=='undefined'&&__pf.init)__pf.init(__a);})();</script>`;
         systemJsHook = `<script>(function(){var s=window.System;s&&s.constructor&&s.constructor.prototype&&(s.constructor.prototype.shouldFetch=function(){return!0})})();</script>`;
     }
 
@@ -55,7 +61,9 @@ export function injectHTML(options: InjectorOptions) : string {
     let engineScriptsContent = `<script>${options.engineScripts.join('\n')}</script>`;
     let gameScriptsContent = `<script>${options.gameScripts.join('\n')}</script>`; // empty now
 
-    html = html.replace('</body>', () => assetMapContent + runtimeContent + importMapScript + engineScriptsContent + systemJsHook + gameScriptsContent + bootScript + '</body>');
+    let adapterBodyContent = options.adapter?.injectBody?.() || '';
+    let wrapCTA = options.adapter?.wrapCTA?.() || ''
+    html = html.replace('</body>', () => assetMapContent + runtimeContent + importMapScript + engineScriptsContent + systemJsHook + gameScriptsContent + bootScript + adapterBodyContent + wrapCTA + '</body>');
 
     return html;
 }

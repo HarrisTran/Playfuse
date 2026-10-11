@@ -19,11 +19,12 @@ async function main() {
     if (args.includes('-h') || args.includes('--help') || args.length === 0) {
         console.log(`
 ${getVersion()}
-Usage: playfuse <input-path> <output-path> [options]
+Usage: playfuse <input-path> <output-path> <ads-network> [options]
 
 Arguments:
   <input-path>   Path to Cocos Creator build folder or .zip file
   <output-path>  Path to output .html file or output directory
+  <ads-network>  Ads network Id, generic for default
 
 Options:
   -v, --version  Show version number
@@ -36,6 +37,7 @@ Options:
     const positionalArgs = args.filter((a) => !a.startsWith('-'));
     const inputPath = positionalArgs[0];
     const outputPath = positionalArgs[1];
+    const adsNetworkId = positionalArgs[2] || 'generic';
 
     if (!inputPath) {
         throw new Error('No input path provided');
@@ -63,7 +65,7 @@ Options:
     const runtimeCode = buildResult.outputFiles[0]!.text;
 
     console.log(`[Playfuse] Packing project from: ${inputPath}`);
-    const outputFile = await packProject(inputPath, outputPath, runtimeCode, { debug });
+    const outputFile = await packProject(inputPath, outputPath, runtimeCode, adsNetworkId, { debug });
     const stats = fs.statSync(outputFile);
     const sizeInMb = (stats.size / (1024 * 1024)).toFixed(2);
     console.log(`[Playfuse] Successfully generated single-file playable ad:`);
