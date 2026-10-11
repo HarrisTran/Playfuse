@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url';
 async function main() {
     const args = process.argv.slice(2);
 
+    const debug = args.includes('--debug');
+
     if (args.includes('-v') || args.includes('--version')) {
         console.log(getVersion());
         return;
@@ -17,7 +19,7 @@ async function main() {
     if (args.includes('-h') || args.includes('--help') || args.length === 0) {
         console.log(`
 ${getVersion()}
-Usage: playfuse <input-path> <output-path>
+Usage: playfuse <input-path> <output-path> [options]
 
 Arguments:
   <input-path>   Path to Cocos Creator build folder or .zip file
@@ -26,6 +28,7 @@ Arguments:
 Options:
   -v, --version  Show version number
   -h, --help     Show help
+  --debug        Build in debug mode (unminified runtime and exposed window variables)
 `);
         return;
     }
@@ -47,18 +50,20 @@ Options:
         runtimeEntry = fileURLToPath(new URL('../../src/runtime/index.ts', import.meta.url));
     }
 
-    console.log(`[Playfuse] Bundling runtime hooks...`);
+    console.log(`[Playfuse] Bundling runtime hooks...${debug ? ' (debug mode)' : ' (minified)'}`);
     const buildResult = await esbuild.build({
         entryPoints: [runtimeEntry],
         bundle: true,
         write: false,
         target: 'es2015',
         format: 'iife',
+        globalName: '__pf',
+        minify: !debug,
     });
     const runtimeCode = buildResult.outputFiles[0]!.text;
 
     console.log(`[Playfuse] Packing project from: ${inputPath}`);
-    const outputFile = await packProject(inputPath, outputPath, runtimeCode);
+    const outputFile = await packProject(inputPath, outputPath, runtimeCode, { debug });
     const stats = fs.statSync(outputFile);
     const sizeInMb = (stats.size / (1024 * 1024)).toFixed(2);
     console.log(`[Playfuse] Successfully generated single-file playable ad:`);

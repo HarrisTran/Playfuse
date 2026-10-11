@@ -91,11 +91,15 @@ export function injectNetworkHooks(assetsMap: Record<string,string>, baseUrl: st
         }
     };
 
-    if (typeof HTMLScriptElement !== 'undefined') interceptSrc(HTMLScriptElement.prototype);
-    if (typeof HTMLImageElement !== 'undefined') interceptSrc(HTMLImageElement.prototype);
-    if (typeof HTMLAudioElement !== 'undefined') interceptSrc(HTMLAudioElement.prototype);
-    if (typeof HTMLVideoElement !== 'undefined') interceptSrc(HTMLVideoElement.prototype);
-    if (typeof HTMLSourceElement !== 'undefined') interceptSrc(HTMLSourceElement.prototype);
+    const domClasses = [
+        typeof HTMLScriptElement !== 'undefined' ? HTMLScriptElement : null,
+        typeof HTMLImageElement !== 'undefined' ? HTMLImageElement : null,
+        typeof HTMLMediaElement !== 'undefined' ? HTMLMediaElement : null,
+        typeof HTMLSourceElement !== 'undefined' ? HTMLSourceElement : null,
+    ];
+    for (const cls of domClasses) {
+        if (cls) interceptSrc(cls.prototype);
+    }
 
     if (typeof Element !== 'undefined') {
         const originalSetAttribute = Element.prototype.setAttribute;
@@ -110,71 +114,80 @@ export function injectNetworkHooks(assetsMap: Record<string,string>, baseUrl: st
         };
     }
 
+    const interceptStyleText = (text: string) => {
+        return text.replace(/url\(['"]?(.*?)['"]?\)/g, (match, url) => {
+            const normalizedUrl = resolveVirtualPath(url, baseUrl);
+            if (assetsMap[normalizedUrl]) {
+                return `url('${assetsMap[normalizedUrl]}')`;
+            }
+            return match;
+        });
+    };
+
     // Hook FontFace API for fonts loaded dynamically
     if (typeof (window as any).FontFace !== 'undefined') {
         const OriginalFontFace = (window as any).FontFace;
         (window as any).FontFace = function(family: string, source: string | ArrayBuffer, descriptors?: any) {
             if (typeof source === 'string') {
-                source = source.replace(/url\(['"]?(.*?)['"]?\)/g, (match, url) => {
-                    const normalizedUrl = resolveVirtualPath(url, baseUrl);
-                    if (assetsMap[normalizedUrl]) {
-                        return `url('${assetsMap[normalizedUrl]}')`;
-                    }
-                    return match;
-                });
+                source = interceptStyleText(source);
             }
             return new OriginalFontFace(family, source, descriptors);
         };
         (window as any).FontFace.prototype = OriginalFontFace.prototype;
     }
 
-    // Hook style tag text injection for CSS-based font loading
-    const originalCreateElement = document.createElement;
-    document.createElement = function(tagName: string, options?: ElementCreationOptions) {
-        const el = originalCreateElement.call(this, tagName, options);
-        if (tagName.toLowerCase() === 'style') {
-            const interceptStyleText = (text: string) => {
-                return text.replace(/url\(['"]?(.*?)['"]?\)/g, (match, url) => {
-                    const normalizedUrl = resolveVirtualPath(url, baseUrl);
-                    if (assetsMap[normalizedUrl]) {
-                        return `url('${assetsMap[normalizedUrl]}')`;
+    // Intercept CSS in style elements at the prototype level
+    if (typeof Node !== 'undefined') {
+        const textContentDesc = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
+        if (textContentDesc && textContentDesc.set) {
+            Object.defineProperty(Node.prototype, 'textContent', {
+                set: function(val: string) {
+                    if (this.nodeName === 'STYLE' && typeof val === 'string') {
+                        val = interceptStyleText(val);
                     }
-                    return match;
-                });
-            };
-
-            const originalAppendChild = el.appendChild;
-            el.appendChild = function<T extends Node>(node: T): T {
-                if (node.nodeType === 3 && node.nodeValue) { // Node.TEXT_NODE
-                    node.nodeValue = interceptStyleText(node.nodeValue);
+                    textContentDesc.set!.call(this, val);
+                },
+                get: function() {
+                    return textContentDesc.get!.call(this);
                 }
-                return originalAppendChild.call(this, node) as T;
-            };
-
-            const textContentDesc = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
-            if (textContentDesc && textContentDesc.set) {
-                Object.defineProperty(el, 'textContent', {
-                    set: function(val: string) {
-                        textContentDesc.set!.call(this, interceptStyleText(val));
-                    },
-                    get: function() {
-                        return textContentDesc.get!.call(this);
-                    }
-                });
-            }
-
-            const innerHTMLDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
-            if (innerHTMLDesc && innerHTMLDesc.set) {
-                Object.defineProperty(el, 'innerHTML', {
-                    set: function(val: string) {
-                        innerHTMLDesc.set!.call(this, interceptStyleText(val));
-                    },
-                    get: function() {
-                        return innerHTMLDesc.get!.call(this);
-                    }
-                });
-            }
+            });
         }
-        return el;
-    };
+
+        const originalAppendChild = Node.prototype.appendChild;
+        Node.prototype.appendChild = function<T extends Node>(child: T): T {
+            if (this.nodeName === 'STYLE' && child.nodeType === 3 && child.nodeValue) {
+                child.nodeValue = interceptStyleText(child.nodeValue);
+            } else if (child.nodeName === 'STYLE' && child.textContent) {
+                child.textContent = interceptStyleText(child.textContent);
+            }
+            return originalAppendChild.call(this, child);
+        };
+
+        const originalInsertBefore = Node.prototype.insertBefore;
+        Node.prototype.insertBefore = function<T extends Node>(node: T, child: Node | null): T {
+            if (this.nodeName === 'STYLE' && node.nodeType === 3 && node.nodeValue) {
+                node.nodeValue = interceptStyleText(node.nodeValue);
+            } else if (node.nodeName === 'STYLE' && node.textContent) {
+                node.textContent = interceptStyleText(node.textContent);
+            }
+            return originalInsertBefore.call(this, node, child);
+        };
+    }
+
+    if (typeof Element !== 'undefined') {
+        const innerHTMLDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+        if (innerHTMLDesc && innerHTMLDesc.set) {
+            Object.defineProperty(Element.prototype, 'innerHTML', {
+                set: function(val: string) {
+                    if (this.nodeName === 'STYLE' && typeof val === 'string') {
+                        val = interceptStyleText(val);
+                    }
+                    innerHTMLDesc.set!.call(this, val);
+                },
+                get: function() {
+                    return innerHTMLDesc.get!.call(this);
+                }
+            });
+        }
+    }
 }

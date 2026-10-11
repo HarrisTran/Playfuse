@@ -55,14 +55,14 @@ Nguyên nhân: Trong dự án gốc, file `import-map.json` nằm trong thư m�
 Nhưng khi chúng ta nhúng (inline) nội dung đó thẳng vào `index.html` (nằm ở thư mục gốc), SystemJS sẽ lấy `index.html` làm gốc. Đường dẫn `"./../"` sẽ lùi nhầm ra ngoài project gốc, dẫn đến địa chỉ vật lý bị sai hoàn toàn so với khóa trong `__assetsMap__`.
 
 ### Cách khắc phục
-Viết một logic tự động đọc, phân tích và **chuẩn hóa (resolve) lại toàn bộ đường dẫn** bên trong `import-map.json` bằng Node.js trước khi tiêm vào HTML:
-- Lấy đường dẫn gốc của `import-map.json` làm base (ví dụ `src/`).
-- Cộng dồn base với đường dẫn relative (`./../`).
-- Biến đổi tất cả thành đường dẫn tĩnh (VD: `"./cocos-js/cc.js"`), khớp 100% với khóa trong `__assetsMap__`.
+Chuẩn hóa (resolve) lại đường dẫn bên trong `import-map.json` bằng module chuẩn `path.posix` của Node.js trước khi tiêm vào HTML:
+- Sử dụng `path.posix.dirname` của file import map và `path.posix.normalize(path.posix.join(baseDir, val))`.
+- Biến đổi tất cả đường dẫn relative lùi thư mục (VD: `"./../cocos-js/cc.js"`) thành đường dẫn tĩnh tương ứng (VD: `"./cocos-js/cc.js"`), khớp 100% với khóa trong `__assetsMap__`.
+- Giải pháp này chỉ vỏn vẹn 4 dòng mã, an toàn và đồng bộ 100%.
 
 ---
 
-## 4. Cocos Engine tự gọi thẻ DOM ẩn (`<script>`, `<img>`)
+## 4. Cocos Engine tự gọi thẻ DOM ẩn (`<script>`, `<img>`, Media)
 
 ### Lý thuyết
 Với việc đã chặn SystemJS và XHR/Fetch, toàn bộ tài nguyên game được cho là đã an toàn trong vùng kìm tỏa của Base64.
@@ -72,13 +72,14 @@ Console vẫn xuất hiện lỗi `GET assets/internal/index.js net::ERR_ABORTED
 Nguyên nhân: Bản thân mã nguồn cốt lõi của Cocos (`cc.js`) tự động gọi lệnh `document.createElement('script')` (để tải asset bundle) hoặc `new Image()` (để tải ảnh), sau đó gán cứng thuộc tính `src = "đường_dẫn"`. Trình duyệt lập tức tung HTTP Request ra mạng trước khi file JS tải xong, dẫn tới lỗi 404.
 
 ### Cách khắc phục
-Áp dụng phương pháp đánh chặn cấp độ DOM (DOM Hijacking). Chúng ta tiến hành ghi đè (Override) thuộc tính Setter `src` của mọi Element trên trình duyệt:
-- `HTMLScriptElement.prototype.src`
-- `HTMLImageElement.prototype.src`
-- `HTMLAudioElement.prototype.src`
-- `Element.prototype.setAttribute('src', ...)`
-
-Mỗi khi Cocos có ý định gán đường dẫn vật lý, Setter bị chặn lại. Trình kiểm tra sẽ tra cứu trong `__assetsMap__`, nếu có, nó lập tức gán Data URI Base64 khổng lồ vào thuộc tính `src`. Trình duyệt bị "đánh lừa" và tải trực tiếp từ bộ nhớ RAM.
+Áp dụng phương pháp đánh chặn cấp độ DOM (DOM Hijacking) một cách cô đọng qua tính kế thừa của Web API:
+- Hook trực tiếp Setter `src` trên Prototype của:
+  - `HTMLScriptElement.prototype.src`
+  - `HTMLImageElement.prototype.src`
+  - `HTMLMediaElement.prototype.src` (bao quát cả Audio & Video qua một prototype cha duy nhất)
+  - `HTMLSourceElement.prototype.src`
+- Ghi đè `Element.prototype.setAttribute('src', ...)`
+- Mỗi khi Cocos gán đường dẫn vật lý, Setter bị chặn lại, tra cứu trong `__assetsMap__`, và lập tức gán Base64 Data URI vào thuộc tính `src`. Trình duyệt tải trực tiếp từ bộ nhớ RAM mà không tạo ra bất kỳ HTTP request nào.
 
 ---
 
@@ -92,12 +93,10 @@ Font `.ttf` không thể load được (`PoetsenOne-Regular.ttf` bị 404).
 Nguyên nhân: Cocos không tải Font bằng XHR, thẻ `<img>` hay API `window.FontFace` như thông thường. Thay vào đó, nó tạo một thẻ `<style>` rỗng, gán một chuỗi CSS `@font-face { src: url(...) }` vào thuộc tính `textContent`, rồi nhét vào `document.head`. CSS Parser của trình duyệt tự động thực thi và bóc tách `url(...)` để tải HTTP. Hook DOM/JS của chúng ta hoàn toàn "mù" trước hành vi của CSS.
 
 ### Cách khắc phục
-Căng lưới chặn ở mọi thao tác sửa đổi thẻ `<style>`. 
-Ghi đè hàm khởi tạo `document.createElement`:
-- Nếu thẻ tạo ra là `style`, tiến hành bắt (hook) các phương thức: `appendChild`, `Node.prototype.textContent`, và `Element.prototype.innerHTML`.
-- Khi Cocos gán chuỗi CSS vào, hàm đánh chặn sẽ dùng RegEx `/url\(['"]?(.*?)['"]?\)/g` để quét tất cả các URL bên trong nội dung.
-- Đường dẫn vật lý của font sẽ bị tráo thành Base64 Data URI ngay trong chuỗi CSS.
-- Kết quả: Khi trình duyệt xử lý CSS, nó đọc được Base64 và không cần bắn HTTP Request ra ngoài mạng lưới. Mọi font chữ được render hoàn hảo.
+Thay vì bọc `document.createElement` phức tạp, chúng ta thiết lập chốt chặn trực tiếp ở cấp độ Prototype chuẩn của DOM:
+- **`Node.prototype.textContent` & `Element.prototype.innerHTML`**: Nếu `this.nodeName === 'STYLE'`, tự động quét và thay thế chuỗi bằng RegEx `/url\(['"]?(.*?)['"]?\)/g` thành Base64 Data URI trước khi gán.
+- **`Node.prototype.appendChild` & `Node.prototype.insertBefore`**: Tự động chuyển đổi các text node con hoặc các thẻ style đã chứa CSS trước khi được gắn vào cây DOM.
+- **Kết quả**: Mã nguồn sạch sẽ, không cần ghi đè hàm tạo thẻ, xử lý trọn vẹn cả 3 cách gán CSS và hiển thị font hoàn hảo 100%.
 
 ---
 

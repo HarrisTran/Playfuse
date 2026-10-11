@@ -1,6 +1,15 @@
 import { injectNetworkHooks } from "./network.js";
 
-const assetsMap = (window as any).__assetsMap__ || {};
-const baseUrl = location.href;
+let initialized = false;
 
-injectNetworkHooks(assetsMap, baseUrl);
+export function init(assetsMap: Record<string, string>) {
+    if (initialized) return;
+    initialized = true;
+    const baseUrl = typeof location !== 'undefined' ? location.href : '';
+    injectNetworkHooks(assetsMap, baseUrl);
+}
+
+// Fallback for debug mode or direct window execution
+if (typeof window !== 'undefined' && (window as any).__assetsMap__) {
+    init((window as any).__assetsMap__);
+}

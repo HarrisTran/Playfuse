@@ -41,7 +41,11 @@ export function normalizePath(p: string): string {
     return parts.join('/');
 }
 
-export async function packProject(inputDir: string, outputDir: string, runtimeCode: string): Promise<string> {
+export interface PackOptions {
+    debug?: boolean | undefined;
+}
+
+export async function packProject(inputDir: string, outputDir: string, runtimeCode: string, options?: PackOptions): Promise<string> {
     const vfs = await loadInput(inputDir);
     const scanResult = scanProject(vfs);
     
@@ -63,17 +67,10 @@ export async function packProject(inputDir: string, outputDir: string, runtimeCo
         const rawMap = decode(scanResult.configs.importMap);
         try {
             const mapObj = JSON.parse(rawMap);
-            const basePath = scanResult.configs.importMap.substring(0, scanResult.configs.importMap.lastIndexOf('/') + 1);
-            
+            const baseDir = path.posix.dirname(scanResult.configs.importMap);
             const resolvePath = (val: string) => {
-                if (val.startsWith('./')) val = val.substring(2);
-                const parts = basePath.split('/').filter(Boolean);
-                const valParts = val.split('/');
-                for (const p of valParts) {
-                    if (p === '..') parts.pop();
-                    else if (p !== '.') parts.push(p);
-                }
-                return './' + parts.join('/');
+                const normalized = path.posix.normalize(path.posix.join(baseDir, val));
+                return normalized.startsWith('.') ? normalized : './' + normalized;
             };
 
             if (mapObj.imports) {
@@ -102,6 +99,7 @@ export async function packProject(inputDir: string, outputDir: string, runtimeCo
         assetsMap: assetsMap,
         runtimeCode: runtimeCode,
         importMapContent: importMapContent,
+        debug: options?.debug,
     });
 
     let targetFile = outputDir;

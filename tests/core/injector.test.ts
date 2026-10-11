@@ -41,18 +41,20 @@ describe('HTML Injector', () => {
     expect(result).toContain('<style>body { color: red; }div { padding: 0; }</style></head>');
   });
 
-  it('nhúng từ điển assetsMap, runtimeCode và các script vào trước thẻ </body>', () => {
+  it('nhúng từ điển assetsMap vào closure khép kín trong production mode (không lộ window.__assetsMap__)', () => {
     const result = injectHTML({
       htmlContent: '<html><head></head><body></body></html>',
       styles: [],
       engineScripts: ['console.log("engine");'],
       gameScripts: ['console.log("game");'],
       assetsMap: { 'test.png': 'data:image/png;base64,123' },
-      runtimeCode: 'console.log("runtime");'
+      runtimeCode: 'console.log("runtime");',
+      importMapContent: '{}',
     });
 
-    // 1. Phải có từ điển assetsMap được serialize
-    expect(result).toContain('window.__assetsMap__ = {"test.png":"data:image/png;base64,123"};');
+    // 1. Không để lộ window.__assetsMap__ trong production
+    expect(result).not.toContain('window.__assetsMap__');
+    expect(result).toContain('var __a={"test.png":"data:image/png;base64,123"};');
     
     // 2. Phải có runtime hook
     expect(result).toContain('console.log("runtime");');
@@ -63,5 +65,20 @@ describe('HTML Injector', () => {
     
     // 4. Phải nằm trước thẻ đóng body
     expect(result).toMatch(/<\/script>\s*<\/body>/);
+  });
+
+  it('hỗ trợ cờ debug để giữ lại biến window.__assetsMap__ cho việc gỡ lỗi', () => {
+    const result = injectHTML({
+      htmlContent: '<html><head></head><body></body></html>',
+      styles: [],
+      engineScripts: [],
+      gameScripts: [],
+      assetsMap: { 'test.png': 'data:image/png;base64,123' },
+      runtimeCode: 'console.log("runtime");',
+      importMapContent: '{}',
+      debug: true,
+    });
+
+    expect(result).toContain('window.__assetsMap__ = {"test.png":"data:image/png;base64,123"};');
   });
 });
