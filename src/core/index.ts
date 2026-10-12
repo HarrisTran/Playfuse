@@ -22,9 +22,9 @@ export function normalizePath(p: string): string {
     const segments = normalized.split("/");
     const parts: string[] = [];
 
-    for(const part of segments) {
-        if(part === "" || part === ".") continue;
-        if(part === "..") {
+    for (const part of segments) {
+        if (part === "" || part === ".") continue;
+        if (part === "..") {
             const top = parts[parts.length - 1];
             if (top !== undefined && top !== "..") parts.pop();
             else if (!isAbsolute) {
@@ -55,7 +55,7 @@ export async function packProject(
 ): Promise<string[]> {
     const vfs = await loadInput(inputDir);
     const scanResult = scanProject(vfs);
-    
+
     const assetFiles = [
         ...(scanResult.assets as string[]),
         ...(scanResult.configs.settings ? [scanResult.configs.settings] : []),
@@ -76,7 +76,7 @@ export async function packProject(
     const styles = scanResult.stylesheets.map(decode);
     const engineScripts = scanResult.engineScripts.map(decode);
     const gameScripts = scanResult.gameScripts.map(decode);
-    
+
     let importMapContent = '{}';
     if (scanResult.configs.importMap) {
         const rawMap = decode(scanResult.configs.importMap);
@@ -107,7 +107,7 @@ export async function packProject(
     }
 
     const adapters = networkRegistry.resolveNetworks(networks);
-    const isSingle = adapters.length === 1;
+    // const isSingle = adapters.length === 1;
     const isExistingDir = fs.existsSync(outputDir) && fs.statSync(outputDir).isDirectory();
     const hasHtmlExt = !isExistingDir && (outputDir.endsWith('.html') || outputDir.endsWith('.htm'));
 
@@ -115,24 +115,25 @@ export async function packProject(
 
     for (const adapter of adapters) {
         let targetFile: string;
-        if (isSingle) {
-            if (hasHtmlExt) {
-                targetFile = outputDir;
-            } else {
-                const fileName = adapter.id === 'generic' ? 'index.html' : `index_${adapter.id}.html`;
-                targetFile = path.join(outputDir, fileName);
-            }
-        } else {
-            if (hasHtmlExt) {
-                const dir = path.dirname(outputDir);
-                const ext = path.extname(outputDir);
-                const base = path.basename(outputDir, ext);
-                targetFile = path.join(dir, `${base}_${adapter.id}${ext}`);
-            } else {
-                targetFile = path.join(outputDir, `index_${adapter.id}.html`);
-            }
-        }
+        // if (isSingle) {
+        //     if (hasHtmlExt) {
+        //         targetFile = outputDir;
+        //     } else {
+        //         const fileName = adapter.id === 'generic' ? 'index.html' : `index_${adapter.id}.html`;
+        //         targetFile = path.join(outputDir, fileName);
+        //     }
+        // } else {
+        //     if (hasHtmlExt) {
+        //         const dir = path.dirname(outputDir);
+        //         const ext = path.extname(outputDir);
+        //         const base = path.basename(outputDir, ext);
+        //         targetFile = path.join(dir, `${base}_${adapter.id}${ext}`);
+        //     } else {
+        //         targetFile = path.join(outputDir, `index_${adapter.id}.html`);
+        //     }
+        // }
 
+        targetFile = path.join(outputDir, adapter.id, `index.html`);
         const finalHtml = injectHTML({
             htmlContent,
             styles,
