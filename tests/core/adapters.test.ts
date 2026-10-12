@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { networkRegistry } from '../../src/core/adapters/registry.js';
 import type { AdNetworkAdapter } from '../../src/core/adapters/types.js';
-import '../../src/core/adapters/generic.js'; // Ensure generic adapter is loaded
+import '../../src/core/adapters/ads_network/generic.js'; // Ensure generic adapter is loaded
 import { injectHTML } from '../../src/core/injector/index.js';
 
 describe('Module 5 - Bài 10: Ad Network Adapters & Strategy Pattern', () => {

@@ -9,7 +9,22 @@ import { fileURLToPath } from 'url';
 async function main() {
     const args = process.argv.slice(2);
 
-    const debug = args.includes('--debug');
+    const printHelp = () => {
+        console.log(`
+${getVersion()}
+Usage: playfuse <input-path> <output-path> [options]
+
+Arguments:
+  <input-path>          Path to Cocos Creator build folder or .zip file
+  <output-path>         Path to output .html file or output directory
+
+Options:
+  -v, --version         Show version number
+  -h, --help            Show help
+  --network <ids>       Ads network(s): generic | applovin | google | mintegral | all (default: generic, e.g. --network google,mintegral)
+  --debug               Build in debug mode (unminified runtime and exposed window variables)
+`);
+    };
 
     if (args.includes('-v') || args.includes('--version')) {
         console.log(getVersion());
@@ -17,33 +32,36 @@ async function main() {
     }
 
     if (args.includes('-h') || args.includes('--help') || args.length === 0) {
-        console.log(`
-${getVersion()}
-Usage: playfuse <input-path> <output-path> <ads-network> [options]
-
-Arguments:
-  <input-path>   Path to Cocos Creator build folder or .zip file
-  <output-path>  Path to output .html file or output directory
-  <ads-network>  Ads network Id, generic for default
-
-Options:
-  -v, --version  Show version number
-  -h, --help     Show help
-  --debug        Build in debug mode (unminified runtime and exposed window variables)
-`);
+        printHelp();
         return;
     }
 
-    const positionalArgs = args.filter((a) => !a.startsWith('-'));
+    const positionalArgs: string[] = [];
+    let network = 'generic';
+    let debug = false;
+
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i]!;
+        if (arg === '--debug') {
+            debug = true;
+        } else if (arg === '--network') {
+            if (i + 1 < args.length && !args[i + 1]!.startsWith('-')) {
+                network = args[i + 1]!;
+                i++;
+            }
+        } else if (arg.startsWith('--network=')) {
+            network = arg.slice('--network='.length);
+        } else if (!arg.startsWith('-')) {
+            positionalArgs.push(arg);
+        }
+    }
+
     const inputPath = positionalArgs[0];
     const outputPath = positionalArgs[1];
-    const adsNetworkId = positionalArgs[2] || 'generic';
 
-    if (!inputPath) {
-        throw new Error('No input path provided');
-    }
-    if (!outputPath) {
-        throw new Error('No output path provided');
+    if (!inputPath || !outputPath) {
+        printHelp();
+        throw new Error('Both <input-path> and <output-path> are required.');
     }
 
     // Resolve runtime index.ts
@@ -65,11 +83,13 @@ Options:
     const runtimeCode = buildResult.outputFiles[0]!.text;
 
     console.log(`[Playfuse] Packing project from: ${inputPath}`);
-    const outputFile = await packProject(inputPath, outputPath, runtimeCode, adsNetworkId, { debug });
-    const stats = fs.statSync(outputFile);
-    const sizeInMb = (stats.size / (1024 * 1024)).toFixed(2);
-    console.log(`[Playfuse] Successfully generated single-file playable ad:`);
-    console.log(`           -> ${outputFile} (${sizeInMb} MB / ${stats.size} bytes)`);
+    const outputFiles = await packProject(inputPath, outputPath, runtimeCode, network, { debug });
+    console.log(`[Playfuse] Successfully generated ${outputFiles.length} playable ad file(s):`);
+    for (const file of outputFiles) {
+        const stats = fs.statSync(file);
+        const sizeInMb = (stats.size / (1024 * 1024)).toFixed(2);
+        console.log(`           -> ${file} (${sizeInMb} MB / ${stats.size} bytes)`);
+    }
 }
 
 main().catch((err) => {

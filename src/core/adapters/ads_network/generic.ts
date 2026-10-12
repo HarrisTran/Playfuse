@@ -1,4 +1,4 @@
-import type { AdNetworkAdapter } from "./types.js";
+import type { AdNetworkAdapter } from "../types.js";
 
 export class GenericAdapter implements AdNetworkAdapter {
     readonly id = 'generic';

@@ -46,7 +46,13 @@ export interface PackOptions {
     debug?: boolean | undefined;
 }
 
-export async function packProject(inputDir: string, outputDir: string, runtimeCode: string, adsNetworkId: string = 'generic', options?: PackOptions): Promise<string> {
+export async function packProject(
+    inputDir: string,
+    outputDir: string,
+    runtimeCode: string,
+    networks: string = 'generic',
+    options?: PackOptions
+): Promise<string[]> {
     const vfs = await loadInput(inputDir);
     const scanResult = scanProject(vfs);
     
@@ -100,24 +106,54 @@ export async function packProject(inputDir: string, outputDir: string, runtimeCo
         }
     }
 
-    const finalHtml = injectHTML({
-        htmlContent: htmlContent,
-        styles: styles,
-        engineScripts: engineScripts,
-        gameScripts: gameScripts,
-        assetsMap: assetsMap,
-        zipBase64: zipBase64,
-        runtimeCode: runtimeCode,
-        importMapContent: importMapContent,
-        adapter: networkRegistry.get(adsNetworkId),
-        debug: options?.debug,
-    });
+    const adapters = networkRegistry.resolveNetworks(networks);
+    const isSingle = adapters.length === 1;
+    const isExistingDir = fs.existsSync(outputDir) && fs.statSync(outputDir).isDirectory();
+    const hasHtmlExt = !isExistingDir && (outputDir.endsWith('.html') || outputDir.endsWith('.htm'));
 
-    let targetFile = outputDir;
-    if ((fs.existsSync(targetFile) && fs.statSync(targetFile).isDirectory()) || !path.extname(targetFile)) {
-        targetFile = path.join(targetFile, 'index.html');
+    const outputFiles: string[] = [];
+
+    for (const adapter of adapters) {
+        let targetFile: string;
+        if (isSingle) {
+            if (hasHtmlExt) {
+                targetFile = outputDir;
+            } else {
+                const fileName = adapter.id === 'generic' ? 'index.html' : `index_${adapter.id}.html`;
+                targetFile = path.join(outputDir, fileName);
+            }
+        } else {
+            if (hasHtmlExt) {
+                const dir = path.dirname(outputDir);
+                const ext = path.extname(outputDir);
+                const base = path.basename(outputDir, ext);
+                targetFile = path.join(dir, `${base}_${adapter.id}${ext}`);
+            } else {
+                targetFile = path.join(outputDir, `index_${adapter.id}.html`);
+            }
+        }
+
+        const finalHtml = injectHTML({
+            htmlContent,
+            styles,
+            engineScripts,
+            gameScripts,
+            assetsMap,
+            zipBase64,
+            runtimeCode,
+            importMapContent,
+            adapter,
+            debug: options?.debug,
+        });
+
+        const targetDir = path.dirname(targetFile);
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
+
+        fs.writeFileSync(targetFile, finalHtml, 'utf-8');
+        outputFiles.push(targetFile);
     }
 
-    fs.writeFileSync(targetFile, finalHtml, 'utf-8');
-    return targetFile;
+    return outputFiles;
 }
