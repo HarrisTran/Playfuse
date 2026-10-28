@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Playfuse Studio - Creative Assets &amp; Playable Ads Simulator</title>
+  
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              cyan: '#00e5ff',
+              purple: '#c026d3',
+              dark: '#080c14',
+              card: '#0f1523',
+              cardBorder: 'rgba(255, 255, 255, 0.08)',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #070a12;
+        color: #f1f5f9;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 21, 35, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 229, 255, 0.4);
+    }
+
+    /* Glowing Neon Dashed Border for Upload Box */
+    .neon-dropzone {
+      position: relative;
+      border: 1.5px dashed rgba(0, 229, 255, 0.45);
+      background: radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.08) 0%, rgba(12, 18, 30, 0.95) 75%);
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.08), inset 0 0 25px rgba(192, 38, 211, 0.05);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .neon-dropzone:hover, .neon-dropzone.drag-active {
+      border-color: rgba(0, 229, 255, 0.9);
+      box-shadow: 0 0 35px rgba(0, 229, 255, 0.2), inset 0 0 30px rgba(192, 38, 211, 0.12);
+      transform: translateY(-1px);
+    }
+
+    /* Glow on Progress Bar */
+    .neon-progress-bar {
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.55), 0 0 30px rgba(192, 38, 211, 0.35);
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-gHiPpOzk.js"></script>
+</head>
+
+<body class="min-h-screen bg-[#070a12] text-slate-100 flex flex-col antialiased relative overflow-x-hidden select-none">
+  
+  <!-- Subtle Ambient Glow Orbs -->
+  <div class="fixed -top-40 -left-40 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none"></div>
+  <div class="fixed -bottom-40 -right-40 w-[600px] h-[600px] bg-fuchsia-600/10 rounded-full blur-[160px] pointer-events-none"></div>
+  <div class="fixed top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-blue-600/5 rounded-full blur-[180px] pointer-events-none"></div>
+
+  <!-- Full-Width Top Header Bar -->
+  <header class="w-full h-16 px-6 border-b border-white/5 flex items-center justify-between bg-[#0e1422]/80 backdrop-blur-md sticky top-0 z-30">
+    <!-- Left: Logo & Studio Title -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-fuchsia-500 flex items-center justify-center shadow-[0_0_18px_rgba(0,229,255,0.45)]">
+        <span class="material-symbols-outlined text-[20px] text-white">view_in_ar</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-white font-extrabold text-base tracking-tight">Playfuse Studio</span>
+        <span class="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-wider ml-1">Cocos 3.x</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Full-Width Content Area with Slim Sidebar & Dashboard Body -->
+  <div class="flex flex-1 w-full min-h-[calc(100vh-64px)]">
+    
+    <!-- Slim Mini Sidebar (Left Edge) - commented out per user request -->
+    <!--
+    <aside class="w-16 border-r border-white/5 flex flex-col items-center py-6 gap-6 bg-[#0a0f18]/90 shrink-0">
+      <div class="relative w-full flex items-center justify-center">
+        <div class="w-1 h-6 bg-cyan-400 rounded-r-full absolute left-0 shadow-[0_0_10px_#00e5ff]"></div>
+        <button class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center transition-transform hover:scale-105" title="Creative Assets" type="button">
+          <span class="material-symbols-outlined text-[22px]">grid_view</span>
+        </button>
+      </div>
+    </aside>
+    -->
+
+    <!-- Dashboard Body: Full width 2-Column Responsive Workspace Grid -->
+    <main class="flex-1 grid grid-cols-1 xl:grid-cols-12 gap-5 p-5 lg:p-6 bg-[#0b0f19]/60">
+      
+      <!-- LEFT COLUMN (7 Cols: Upload, Targets, Build, Progress & Size Inspector) -->
+      <div class="xl:col-span-7 flex flex-col space-y-4">
+        
+        <!-- Section Title -->
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">Creative Assets</h1>
+        </div>
+
+        <!-- UPLOAD YOUR BUILD -->
+        <div class="flex flex-col">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">UPLOAD YOUR BUILD</div>
+          
+          <!-- Hidden File Input -->
+          <input type="file" id="fileInput" accept=".zip" class="hidden" />
+
+          <!-- Neon Glowing Dropzone Container -->
+          <div class="neon-dropzone cursor-pointer rounded-2xl p-5 text-center group" id="dropzoneContainer">
+            <div class="flex flex-col items-center justify-center space-y-2.5">
+              <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.25)] group-hover:scale-105 transition-transform duration-200">
+                <span class="material-symbols-outlined text-[30px]">cloud_upload</span>
+              </div>
+              
+              <p class="text-white font-bold text-sm tracking-tight">
+                Drag &amp; drop ZIP file here
+              </p>
+              <p class="text-slate-400 text-xs">
+                Supported formats: .zip, 30MB max
+              </p>
+
+              <!-- Staged File Info Badge (shown after selecting a file) -->
+              <div class="mt-2 hidden flex-wrap items-center justify-center gap-2.5 bg-[#121a2a] border border-cyan-500/30 px-3.5 py-1.5 rounded-xl shadow-[0_0_15px_rgba(0,229,255,0.15)]" id="stagedFileInfo">
+                <span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold text-[10px]">ZIP</span>
+                <span class="text-xs font-bold text-white max-w-[200px] truncate" id="stagedFileName">build.zip</span>
+                <span class="text-xs text-slate-400" id="stagedFileSize">0 MB</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">Ready</span>
+                <button class="text-slate-400 hover:text-red-400 transition-colors ml-1 flex items-center" id="removeFileBtn" type="button" title="Remove archive">
+                  <span class="material-symbols-outlined text-[16px]">cancel</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TARGET NETWORKS SECTION -->
+        <div class="flex flex-col space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">TARGET NETWORKS</span>
+            <button class="text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors" id="btnSelectAll" type="button">Multi-Selection</button>
+          </div>
+          
+          <!-- Target Network Chips Container -->
+          <div class="flex flex-wrap gap-2.5" id="networksContainer"></div>
+        </div>
+
+        <!-- BUILD ACTION BUTTON -->
+        <div>
+          <button class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-400 to-indigo-600 text-white font-extrabold text-sm tracking-wide shadow-[0_0_25px_rgba(0,229,255,0.35)] hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed" id="btnBuild" type="button" disabled>
+            <span class="material-symbols-outlined text-[20px]">bolt</span>
+            <span>BUILD PLAYABLE AD(S)</span>
+          </button>
+        </div>
+
+        <!-- BOTTOM 2 CARDS: BUILD PROGRESS & SIZE INSPECTOR -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 items-start">
+          
+          <!-- Card 1: Build Progress (Fixed height, decoupled from Size Inspector) -->
+          <div class="bg-[#0e1422] border border-white/5 rounded-2xl p-4 flex flex-col justify-between space-y-3.5 self-start w-full h-[154px]" id="progressCard">
+            <div class="flex items-center justify-between">
+              <span class="text-white font-bold text-sm">Build Progress</span>
+              <span class="text-[10px] uppercase font-bold text-cyan-400/90 font-mono tracking-wider">Web Worker</span>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs font-semibold">
+                <span class="text-slate-300 truncate max-w-[160px]" id="progressStep">Ready to build</span>
+                <span class="text-cyan-400 font-bold font-mono" id="progressPercent">0%</span>
+              </div>
+              <!-- Progress Track & Fill -->
+              <div class="w-full h-2.5 bg-[#172133] rounded-full overflow-hidden p-0.5 shadow-inner">
+                <div class="h-full bg-gradient-to-r from-cyan-400 via-teal-300 to-fuchsia-500 rounded-full transition-all duration-300 neon-progress-bar" id="progressBar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Size Inspector -->
+          <div class="bg-[#0e1422] border border-white/5 rounded-2xl p-4 flex flex-col space-y-3 w-full">
+            <div class="flex items-center justify-between">
+              <span class="text-white font-bold text-sm">Size Inspector</span>
+              <span class="text-[11px] text-slate-400">Final Build Sizes</span>
+            </div>
+
+            <!-- List of built playable sizes -->
+            <div class="space-y-2 flex-1 flex flex-col justify-center min-h-[90px] max-h-[220px] pt-3" id="sizeInspectorList">
+              <p class="text-center text-slate-500 text-xs py-3 italic">Chưa có bản build nào. Nhấn "BUILD PLAYABLE AD(S)" để bắt đầu.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- DOWNLOAD ZIP BUTTON (FOR ALL AD NETWORKS) -->
+        <div class="pt-1">
+          <button class="w-full py-3.5 px-4 rounded-xl bg-[#121a2a] border border-cyan-500/35 text-cyan-300 hover:text-white hover:bg-cyan-500/20 hover:border-cyan-400 font-bold text-xs tracking-wide shadow-[0_0_20px_rgba(0,229,255,0.15)] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed" id="btnDownloadAll" type="button" disabled>
+            <span class="material-symbols-outlined text-[18px]">archive</span>
+            <span>DOWNLOAD ZIP (ALL AD NETWORKS)</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN (5 Cols: Device Simulation & Phone Mockup with Glowing Backlight) -->
+      <div class="xl:col-span-5 flex flex-col items-center bg-[#0d1422]/60 border border-white/5 rounded-2xl p-5 lg:p-6 relative overflow-hidden">
+        
+        <!-- Simulator Actions Toolbar with Wi-Fi Note & Action Buttons -->
+        <div class="w-full flex flex-col items-end gap-1.5 pb-2 relative z-10">
+          <!-- Wi-Fi Note above buttons -->
+          <div class="flex items-center gap-1.5 text-[11px] text-cyan-400/90 bg-cyan-950/40 border border-cyan-500/20 px-2.5 py-0.5 rounded-full shadow-sm">
+            <span class="material-symbols-outlined text-[13px] text-cyan-400">wifi</span>
+            <span class="font-medium tracking-tight">Cần kết nối cùng Wi-Fi nội bộ</span>
+          </div>
+
+          <!-- Action Buttons: Scan QR & Reload -->
+          <div class="flex items-center gap-2">
+            <button class="px-2.5 py-1.5 rounded-lg bg-[#141d2e] hover:bg-cyan-950/40 text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 transition-all flex items-center gap-1.5 text-xs shadow-[0_0_12px_rgba(0,229,255,0.12)] active:scale-95" id="btnScanQr" title="Quét mã QR để test trực tiếp trên điện thoại" type="button">
+              <span class="material-symbols-outlined text-[16px]">qr_code_2</span>
+              <span class="font-bold">Quét QR</span>
+            </button>
+
+            <button class="px-2.5 py-1.5 rounded-lg bg-[#141d2e] hover:bg-[#1a263d] text-slate-300 hover:text-white border border-white/10 hover:border-white/20 transition-all flex items-center gap-1.5 text-xs shadow-sm active:scale-95" id="btnReload" title="Reload Game" type="button">
+              <span class="material-symbols-outlined text-[16px]">refresh</span>
+              <span class="font-medium">Reload</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Phone Mockup Container with Ambient Backlight Glow (matching mockup) -->
+        <div class="relative flex items-center justify-center my-auto py-2 w-full">
+          
+          <!-- Soft Atmospheric Backlight Halo & Glow behind Phone (matching mockup) -->
+          <div class="absolute w-[350px] sm:w-[380px] h-[580px] sm:h-[610px] bg-gradient-to-tr from-cyan-400/40 via-blue-600/25 to-fuchsia-500/45 rounded-[56px] blur-[44px] pointer-events-none"></div>
+          <div class="absolute w-[290px] sm:w-[320px] h-[510px] sm:h-[540px] bg-gradient-to-b from-cyan-400/35 to-fuchsia-500/40 rounded-[46px] blur-[30px] pointer-events-none"></div>
+          <div class="absolute -top-3 -left-5 w-40 h-40 bg-cyan-400/35 rounded-full blur-[36px] pointer-events-none"></div>
+          <div class="absolute -bottom-3 -right-5 w-44 h-44 bg-fuchsia-500/40 rounded-full blur-[38px] pointer-events-none"></div>
+
+          <!-- Realistic Phone Mockup Frame (iPhone Titanium Style) -->
+          <div class="relative z-10 w-[290px] sm:w-[310px] h-[550px] sm:h-[580px] bg-[#000000] rounded-[44px] p-2 border-[3.5px] border-[#253042] shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_35px_rgba(0,229,255,0.25)] transition-all duration-300" id="phoneBezel">
+            <div class="relative w-full h-full bg-[#0a0e17] rounded-[36px] overflow-hidden flex flex-col justify-between select-none">
+              
+              <!-- Dynamic Island Capsule -->
+              <div class="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-5 bg-black rounded-full z-30 flex items-center justify-between px-2.5 pointer-events-none">
+                <span class="w-2 h-2 rounded-full bg-slate-800"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500/70"></span>
+              </div>
+
+              <!-- Iframe Game Stage (Interactive Cocos Playable Ad) -->
+              <iframe id="gameIframe" class="w-full h-full border-0 hidden"></iframe>
+
+              <!-- Empty Placeholder Screen (Clean screen without any text, as requested) -->
+              <div class="w-full h-full flex flex-col items-center justify-center p-6 text-center text-slate-500" id="iframePlaceholder">
+                <div class="w-16 h-16 rounded-2xl bg-cyan-500/5 border border-cyan-500/15 text-cyan-400/40 flex items-center justify-center shadow-[0_0_25px_rgba(0,229,255,0.08)]">
+                  <span class="material-symbols-outlined text-[32px]">sports_esports</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Floating CTA Notification Toast (matching mockup bottom-right toast) -->
+        <div class="absolute bottom-5 right-5 z-50 px-4 py-3 bg-[#131d2e]/95 border border-slate-700/60 text-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.95),0_0_25px_rgba(16,185,129,0.25)] backdrop-blur-xl flex items-center gap-3 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none max-w-[360px]" id="ctaTestToast">
+          <div class="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-[15px] font-bold">check</span>
+          </div>
+          <div class="flex flex-col min-w-0 pr-1">
+            <span class="text-xs font-bold text-white tracking-wide leading-tight" id="toastTitle">CTA Click Test: SUCCESSFUL.</span>
+            <span class="text-[11px] leading-tight text-slate-400 font-mono truncate mt-0.5" id="toastMessage">Log: event_cta_click captured</span>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- QR Code Mobile Preview Modal (Unity Luna Style) -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 opacity-0 pointer-events-none" id="qrModal">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-md" id="qrModalBackdrop"></div>
+
+    <!-- Modal Card -->
+    <div class="relative z-10 w-full max-w-sm bg-[#0c1322] border border-cyan-500/30 rounded-3xl p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_35px_rgba(0,229,255,0.18)] flex flex-col items-center space-y-4">
+      
+      <!-- Modal Header -->
+      <div class="w-full flex items-center justify-between border-b border-white/5 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-[17px]">qr_code_2</span>
+          </div>
+          <span class="text-white font-bold text-sm tracking-tight">Mobile Live Preview</span>
+        </div>
+        <button class="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 flex items-center justify-center" id="closeQrModalBtn" type="button" title="Đóng">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <!-- Network Target Indicator -->
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-400">Target Network:</span>
+        <span class="px-2.5 py-0.5 rounded-full bg-cyan-950/50 border border-cyan-400/40 text-cyan-300 font-bold text-xs" id="qrNetworkBadge">Google Ads</span>
+      </div>
+
+      <!-- Canvas QR Code with White Frame -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-xl flex items-center justify-center border border-white/10">
+        <canvas id="qrCanvas" class="w-[200px] h-[200px] block"></canvas>
+      </div>
+
+      <!-- Instructions & Wi-Fi Reminder -->
+      <div class="w-full bg-[#121b2d] border border-cyan-500/20 rounded-xl p-3 text-center space-y-1">
+        <div class="flex items-center justify-center gap-1.5 text-cyan-300 font-semibold text-xs">
+          <span class="material-symbols-outlined text-[15px]">wifi</span>
+          <span>Cùng mạng Wi-Fi nội bộ</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Mở camera hoặc Zalo trên điện thoại quét mã để chơi thử trực tiếp trên thiết bị thật.
+        </p>
+      </div>
+
+      <!-- URL Input & Copy Button -->
+      <div class="w-full flex items-center gap-2">
+        <input type="text" readonly id="qrUrlText" class="flex-1 bg-[#080d17] border border-white/10 text-slate-300 text-[11px] font-mono px-3 py-2 rounded-xl focus:outline-none select-all truncate" value="" />
+        <button type="button" id="copyQrLinkBtn" class="shrink-0 px-3 py-2 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">content_copy</span>
+          <span>Copy</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

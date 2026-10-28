@@ -19,4 +19,4 @@ yarn-error.log*
 # OS / IDE
 .DS_Store
 .vscode/*
-.idea/workspace.xml
+.idea/workspace.xml/dist-web

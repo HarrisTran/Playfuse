@@ -160,7 +160,7 @@ export function injectNetworkHooks(assetsMap: Record<string,string>, baseUrl: st
             } else if (child.nodeName === 'STYLE' && child.textContent) {
                 child.textContent = interceptStyleText(child.textContent);
             }
-            return originalAppendChild.call(this, child);
+            return originalAppendChild.call(this, child) as T;
         };
 
         const originalInsertBefore = Node.prototype.insertBefore;
@@ -170,7 +170,7 @@ export function injectNetworkHooks(assetsMap: Record<string,string>, baseUrl: st
             } else if (node.nodeName === 'STYLE' && node.textContent) {
                 node.textContent = interceptStyleText(node.textContent);
             }
-            return originalInsertBefore.call(this, node, child);
+            return originalInsertBefore.call(this, node, child) as T;
         };
     }
 

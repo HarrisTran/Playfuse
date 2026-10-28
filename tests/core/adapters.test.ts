@@ -68,7 +68,7 @@ describe('Module 5 - Bài 10: Ad Network Adapters & Strategy Pattern', () => {
       // Trích xuất phần JavaScript bên trong <script>...</script>
       const match = script.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
       expect(match).toBeTruthy();
-      const jsCode = match![1];
+      const jsCode = match![1] ?? '';
 
       // Đảm bảo mã JavaScript hợp lệ về mặt cú pháp (không bị Uncaught SyntaxError: Unexpected token ':')
       expect(() => new Function(jsCode)).not.toThrow();
@@ -78,7 +78,7 @@ describe('Module 5 - Bài 10: Ad Network Adapters & Strategy Pattern', () => {
       const script = generic.wrapCTA();
       const match = script.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
       expect(match).toBeTruthy();
-      const jsCode = match![1];
+      const jsCode = match![1] ?? '';
 
       expect(() => new Function(jsCode)).not.toThrow();
     });

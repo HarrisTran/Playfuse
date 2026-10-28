@@ -25,9 +25,11 @@
   ],
   "exclude": [
     "src/runtime",
+    "src/browser",
     "tests/runtime",
     "node_modules",
     "dist",
+    "dist-web",
     "fixtures"
   ]
 }

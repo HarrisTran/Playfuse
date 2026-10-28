@@ -1,4 +1,4 @@
-import { normalizePath } from "../index.js";
+import { normalizePath } from "../path.js";
 import { InputError } from "./errors.js";
 
 /**

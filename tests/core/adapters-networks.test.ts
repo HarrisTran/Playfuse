@@ -184,19 +184,19 @@ describe('Module 5 - Bài 11: Hiện Thực Adapter Từng Mạng & Batch Build'
       }
     });
 
-    it('build mặc định (generic) tạo index.html', async () => {
+    it('build mặc định (generic) tạo generic/index.html', async () => {
       const outputDir = path.join(testOutputDir, 'single_default');
       const files = await packProject(fixtureDir, outputDir, dummyRuntime);
       expect(files).toHaveLength(1);
-      expect(files[0]).toContain('index.html');
+      expect(files[0]).toContain(path.join('generic', 'index.html'));
       expect(fs.existsSync(files[0]!)).toBe(true);
     });
 
-    it('build chỉ google tạo index_google.html', async () => {
+    it('build chỉ google tạo google/index.html', async () => {
       const outputDir = path.join(testOutputDir, 'single_google');
       const files = await packProject(fixtureDir, outputDir, dummyRuntime, 'google');
       expect(files).toHaveLength(1);
-      expect(files[0]).toContain('index_google.html');
+      expect(files[0]).toContain(path.join('google', 'index.html'));
       const content = fs.readFileSync(files[0]!, 'utf-8');
       expect(content).toContain('exitapi.js');
       expect(content).toContain('ExitApi.exit');
@@ -206,39 +206,38 @@ describe('Module 5 - Bài 11: Hiện Thực Adapter Từng Mạng & Batch Build'
       const outputDir = path.join(testOutputDir, 'multi_selective');
       const files = await packProject(fixtureDir, outputDir, dummyRuntime, 'google,mintegral');
       expect(files).toHaveLength(2);
-      expect(files.some((f) => f.endsWith('index_google.html'))).toBe(true);
-      expect(files.some((f) => f.endsWith('index_mintegral.html'))).toBe(true);
+      expect(files.some((f) => f.endsWith(path.join('google', 'index.html')))).toBe(true);
+      expect(files.some((f) => f.endsWith(path.join('mintegral', 'index.html')))).toBe(true);
 
-      const googleContent = fs.readFileSync(files.find((f) => f.endsWith('index_google.html'))!, 'utf-8');
+      const googleContent = fs.readFileSync(files.find((f) => f.endsWith(path.join('google', 'index.html'))!)!, 'utf-8');
       expect(googleContent).toContain('exitapi.js');
 
-      const mintegralContent = fs.readFileSync(files.find((f) => f.endsWith('index_mintegral.html'))!, 'utf-8');
+      const mintegralContent = fs.readFileSync(files.find((f) => f.endsWith(path.join('mintegral', 'index.html'))!)!, 'utf-8');
       expect(mintegralContent).toContain('gameStart');
       expect(mintegralContent).toContain('window.install');
     });
 
-    it('build all tạo đủ cả 4 file HTML với SDK tương ứng', async () => {
+    it('build all tạo đủ cả 4 folder với index.html và SDK tương ứng', async () => {
       const outputDir = path.join(testOutputDir, 'batch_all');
       const files = await packProject(fixtureDir, outputDir, dummyRuntime, 'all');
       expect(files).toHaveLength(4);
 
-      const fileNames = files.map((f) => path.basename(f));
-      expect(fileNames).toContain('index_generic.html');
-      expect(fileNames).toContain('index_applovin.html');
-      expect(fileNames).toContain('index_google.html');
-      expect(fileNames).toContain('index_mintegral.html');
+      expect(files.some((f) => f.endsWith(path.join('generic', 'index.html')))).toBe(true);
+      expect(files.some((f) => f.endsWith(path.join('applovin', 'index.html')))).toBe(true);
+      expect(files.some((f) => f.endsWith(path.join('google', 'index.html')))).toBe(true);
+      expect(files.some((f) => f.endsWith(path.join('mintegral', 'index.html')))).toBe(true);
 
       // Kiểm tra nội dung SDK của từng file
-      const applovinFile = files.find((f) => f.endsWith('index_applovin.html'))!;
+      const applovinFile = files.find((f) => f.endsWith(path.join('applovin', 'index.html')))!;
       expect(fs.readFileSync(applovinFile, 'utf-8')).toContain('mraid.js');
 
-      const googleFile = files.find((f) => f.endsWith('index_google.html'))!;
+      const googleFile = files.find((f) => f.endsWith(path.join('google', 'index.html')))!;
       expect(fs.readFileSync(googleFile, 'utf-8')).toContain('exitapi.js');
 
-      const mintegralFile = files.find((f) => f.endsWith('index_mintegral.html'))!;
+      const mintegralFile = files.find((f) => f.endsWith(path.join('mintegral', 'index.html')))!;
       expect(fs.readFileSync(mintegralFile, 'utf-8')).toContain('gameStart');
 
-      const genericFile = files.find((f) => f.endsWith('index_generic.html'))!;
+      const genericFile = files.find((f) => f.endsWith(path.join('generic', 'index.html')))!;
       expect(fs.readFileSync(genericFile, 'utf-8')).toContain('window.open');
     });
   });
