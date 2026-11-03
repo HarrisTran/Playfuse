@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-web
+fixtures
+docs/notes
+.git
+.DS_Store
+*.log
+vendor/tiny-png/target

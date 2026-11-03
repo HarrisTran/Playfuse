@@ -27,20 +27,34 @@ Công cụ đóng gói bản build `web-mobile` từ **Cocos Creator 3.x** thàn
 
 ## 🚀 Hướng Dẫn Sử Dụng
 
-### 1. Cài đặt
+### 1. Chạy bằng Docker
 
-Yêu cầu máy đã cài Node.js (>= 20) và Rust / Cargo:
+```bash
+git clone --recurse-submodules https://github.com/HarrisTran/Playfuse.git
+cd Playfuse
+
+# Build image
+docker build -t playfuse .
+
+# Khởi chạy Web Studio (truy cập http://localhost:5174)
+docker run -p 5174:5174 playfuse
+```
+
+---
+
+### 2. Chạy trực tiếp (Local)
+
 
 ```bash
 git clone --recurse-submodules https://github.com/HarrisTran/Playfuse.git
 cd Playfuse
 npm install
 
-# Biên dịch công cụ nén ảnh Rust (nếu dùng tính năng nén texture)
-npm run build:optimizer
+# Khởi chạy Web Studio
+npm run web
 ```
 
-### 2. Sử dụng qua CLI
+### 3. Sử dụng qua CLI (Đóng gói từ Terminal)
 
 ```bash
 # Đóng gói cơ bản ra file generic index.html
