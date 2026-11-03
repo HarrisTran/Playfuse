@@ -100,10 +100,15 @@ export async function openQrPreviewModal(
     // Đảm bảo dữ liệu mới nhất đã được gửi lên endpoint
     syncPreviewToServer(outputs);
 
-    // Tính toán URL mạng LAN
-    const lanIp = await getLanIp();
-    const port = window.location.port || '5174';
-    currentPreviewUrl = `http://${lanIp}:${port}/preview?net=${encodeURIComponent(networkId)}`;
+    // Tính toán URL preview (nếu chạy trên domain production/Vercel thì dùng luôn origin, nếu local thì dùng IP LAN)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalhost && window.location.hostname) {
+        currentPreviewUrl = `${window.location.origin}/preview?net=${encodeURIComponent(networkId)}`;
+    } else {
+        const lanIp = await getLanIp();
+        const port = window.location.port || '5174';
+        currentPreviewUrl = `http://${lanIp}:${port}/preview?net=${encodeURIComponent(networkId)}`;
+    }
 
     if (qrNetworkBadge) {
         qrNetworkBadge.textContent = networkLabel || networkId.toUpperCase();
