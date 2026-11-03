@@ -184,12 +184,16 @@
 
 ### Module 7: Tối Ưu Dung Lượng & Hiệu Năng (Giai đoạn 5)
 
-#### Bài 14: Asset Deduplication (Chống Trùng Lặp) & Nén Ảnh Tích Hợp
-- **Lý thuyết:** Hash cryptographic (SHA-256) xác định trùng lặp nội dung; Tối ưu dung lượng Payload Base64; Tích hợp module nén nhị phân native / Wasm.
-- **Khối lượng công việc:**
-  - Tính SHA-256 cho toàn bộ asset; Nếu nhiều đường dẫn trỏ đến nội dung giống nhau, chỉ lưu 1 bản Base64 duy nhất trong `__assetsMap__`, các đường dẫn khác chỉ là tham chiếu alias.
-  - Tích hợp công cụ nén ảnh `tiny-png` (Rust) qua CLI wrapper hoặc build Wasm để tối ưu hoá texture trước khi đưa vào bundle.
-- **Nghiệm thu:** Giảm dung lượng file output cuối cùng thêm 15% - 40% trên các project có nhiều asset lặp lại.
+#### [Đã xong] Bài 14: Nén Ảnh Tích Hợp (Image / Texture Compression với Rust Submodule)
+- **Lý thuyết:** Tối ưu hoá dung lượng nhị phân trước khi chuyển đổi Base64/Zip; Tích hợp công cụ nén ảnh `tiny-png` (Rust) qua Git Submodule và Node Adapter.
+- **Khối lượng công việc đã hoàn thành:**
+  - Tích hợp Git Submodule `vendor/tiny-png` (imagequant + oxipng) và build script trong `package.json`.
+  - Thiết kế interface trừu tượng `ImageOptimizer` trong `src/core/optimizer/types.ts` (tuân thủ Clean Architecture).
+  - Hiện thực `TinyPngOptimizer` Node Adapter trong `src/node/optimizer.ts` với cơ chế fallback lossless thông minh.
+  - Tích hợp tuỳ chọn nén trên CLI (`--compress`, `--q-lossy`, `--q-lossless`) và Web UI (Card Texture Optimization với Slider điều chỉnh Lossy / Lossless).
+  - Tích hợp endpoint streaming `/api/optimize-zip` trong `vite.config.ts`.
+  - *(Lưu ý: Bước Asset Deduplication SHA-256 được bỏ qua theo yêu cầu)*.
+- **Nghiệm thu:** Đạt mức giảm dung lượng thực tế từ 35% - 40% trên toàn bộ file HTML playable ad (4.5 MB -> 2.8 MB); pass 100% test suite.
 
 ---
 

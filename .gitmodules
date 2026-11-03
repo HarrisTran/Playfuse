@@ -1,0 +1,3 @@
+[submodule "vendor/tiny-png"]
+	path = vendor/tiny-png
+	url = https://github.com/HarrisTran/tiny-png.git

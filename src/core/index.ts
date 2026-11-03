@@ -3,16 +3,27 @@ import fs from 'fs';
 import path from 'path';
 import { packProjectCore, type PackOptions } from "./packer.js";
 export * from "./packer.js";
+export * from "./optimizer/index.js";
 export { normalizePath } from "./path.js";
+
+import type { ImageOptimizer, OptimizeOptions } from "./optimizer/index.js";
+
+export interface PackProjectOptions extends PackOptions {
+    optimizer?: ImageOptimizer | undefined;
+    optimizeOptions?: OptimizeOptions | undefined;
+}
 
 export async function packProject(
     inputDir: string,
     outputDir: string,
     runtimeCode: string,
     networks: string = 'generic',
-    options?: PackOptions
+    options?: PackProjectOptions
 ): Promise<string[]> {
     const vfs = await loadInput(inputDir);
+    if (options?.optimizer) {
+        await options.optimizer.optimize(vfs, options.optimizeOptions);
+    }
     const outputs = packProjectCore(vfs, runtimeCode, networks, options);
 
     const outputFiles: string[] = [];

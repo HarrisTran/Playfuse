@@ -28,6 +28,13 @@ export class VirtualFS implements Iterable<[path: string, data: Uint8Array]> {
         }
         return undefined;
     }
+    set(path: string, data: Uint8Array): void {
+        const normalized = normalizePath(path);
+        if (normalized.startsWith('../')) {
+            throw new InputError('UNSAFE_PATH', `Unsafe path: ${normalized}`);
+        }
+        this.files.set(normalized, data);
+    }
     readText(path: string): string | undefined {
         const data = this.get(path);
         if(data === undefined) return undefined;

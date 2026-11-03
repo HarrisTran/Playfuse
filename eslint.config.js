@@ -9,6 +9,7 @@ export default defineConfig([
       'dist/**',
       'node_modules/**',
       'fixtures/**',
+      'vendor/**',
     ],
   },
 

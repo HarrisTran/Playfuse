@@ -76,7 +76,7 @@
       box-shadow: 0 0 16px rgba(0, 229, 255, 0.55), 0 0 30px rgba(192, 38, 211, 0.35);
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-gHiPpOzk.js"></script>
+  <script type="module" crossorigin src="/assets/index-BLK54rIb.js"></script>
 </head>
 
 <body class="min-h-screen bg-[#070a12] text-slate-100 flex flex-col antialiased relative overflow-x-hidden select-none">
@@ -170,6 +170,70 @@
           
           <!-- Target Network Chips Container -->
           <div class="flex flex-wrap gap-2.5" id="networksContainer"></div>
+        </div>
+
+        <!-- TEXTURE OPTIMIZATION (TINY-PNG RUST) -->
+        <div class="bg-[#0e1422] border border-white/5 rounded-2xl p-4 transition-all duration-300" id="optimizerCard">
+          <!-- Card Header & Toggle -->
+          <div class="flex items-center justify-between cursor-pointer" id="optimizerHeader">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-fuchsia-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(0,229,255,0.15)] shrink-0">
+                <span class="material-symbols-outlined text-[18px]">photo_size_select_large</span>
+              </div>
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                  <span class="text-white font-bold text-xs tracking-tight">TEXTURE OPTIMIZATION</span>
+                  <!-- <span class="px-1.5 py-0.2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-bold uppercase tracking-wider font-mono">Rust tiny-png</span> -->
+                </div>
+                <!-- <span class="text-[11px] text-slate-400" id="optimizerStatusSubtitle">Nén ảnh PNG giảm 50-80% dung lượng bản build</span> -->
+              </div>
+            </div>
+
+            <!-- Custom Toggle Switch -->
+            <label class="relative inline-flex items-center cursor-pointer select-none" onclick="event.stopPropagation()">
+              <input type="checkbox" id="toggleOptimizePng" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-[#1a2335] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-cyan-500 peer-checked:to-teal-400 shadow-inner"></div>
+            </label>
+          </div>
+
+          <!-- Collapsible Sliders Panel (shown when toggle is ON) -->
+          <div class="mt-4 pt-3.5 border-t border-white/5 space-y-3.5 transition-all duration-300" id="optimizerControls">
+            
+            <!-- Lossy Quality Slider (Single Value) -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-300 font-semibold">Chất lượng Lossy (imagequant)</span>
+                  <!-- <span class="text-[10px] text-cyan-400 font-mono" id="lossyQualityHint">(Cân bằng khuyên dùng)</span> -->
+                </div>
+                <span class="text-cyan-400 font-bold font-mono text-xs bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20" id="lossyQualityValue">80%</span>
+              </div>
+              <input type="range" id="lossyQualitySlider" min="20" max="100" value="80" step="5" class="w-full h-1.5 bg-[#172133] rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none" />
+              
+            </div>
+
+            <!-- Lossless Optimization Preset Slider -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-300 font-semibold">Mức tối ưu Lossless (oxipng)</span>
+                  <span class="text-[10px] text-slate-500 font-mono">(Deflate + strip EXIF)</span>
+                </div>
+                <span class="text-cyan-400 font-bold font-mono text-xs bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20" id="losslessLevelValue">Level 2 (Fast)</span>
+              </div>
+              <input type="range" id="losslessLevelSlider" min="0" max="6" value="2" step="1" class="w-full h-1.5 bg-[#172133] rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none" />
+              
+            </div>
+
+            <!-- Real-time Savings Banner -->
+            <div class="hidden items-center justify-between bg-emerald-500/10 border border-emerald-500/25 px-3 py-2 rounded-xl text-xs text-emerald-300 shadow-sm transition-all" id="optimizationStatsBanner">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+                <span id="optimizationStatsText" class="font-medium">Chưa có dữ liệu</span>
+              </div>
+            </div>
+
+          </div>
         </div>
 
         <!-- BUILD ACTION BUTTON -->

@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "build:optimizer": "cargo build --release --manifest-path vendor/tiny-png/Cargo.toml",
     "dev": "tsx src/cli/index.ts",
     "web": "node scripts/gen-runtime.mjs && vite",
     "web:build": "node scripts/gen-runtime.mjs && vite build",

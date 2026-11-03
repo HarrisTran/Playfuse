@@ -34,6 +34,19 @@ const btnSelectAll = document.getElementById('btnSelectAll') as HTMLButtonElemen
 const networksContainer = document.getElementById('networksContainer') as HTMLDivElement;
 const btnBuild = document.getElementById('btnBuild') as HTMLButtonElement;
 
+// Texture Optimizer Controls
+const toggleOptimizePng = document.getElementById('toggleOptimizePng') as HTMLInputElement;
+const optimizerControls = document.getElementById('optimizerControls') as HTMLDivElement;
+const optimizerHeader = document.getElementById('optimizerHeader') as HTMLDivElement;
+const optimizerStatusSubtitle = document.getElementById('optimizerStatusSubtitle') as HTMLSpanElement;
+const lossyQualitySlider = document.getElementById('lossyQualitySlider') as HTMLInputElement;
+const lossyQualityValue = document.getElementById('lossyQualityValue') as HTMLSpanElement;
+const lossyQualityHint = document.getElementById('lossyQualityHint') as HTMLSpanElement;
+const losslessLevelSlider = document.getElementById('losslessLevelSlider') as HTMLInputElement;
+const losslessLevelValue = document.getElementById('losslessLevelValue') as HTMLSpanElement;
+const optimizationStatsBanner = document.getElementById('optimizationStatsBanner') as HTMLDivElement;
+const optimizationStatsText = document.getElementById('optimizationStatsText') as HTMLSpanElement;
+
 // Progress
 const progressCard = document.getElementById('progressCard') as HTMLDivElement;
 const progressPercent = document.getElementById('progressPercent') as HTMLSpanElement;
@@ -147,6 +160,8 @@ function handleSelectedFile(file: File) {
     stagedFileInfo.classList.add('flex');
     btnBuild.disabled = false;
     btnBuild.classList.remove('opacity-40', 'cursor-not-allowed');
+    optimizationStatsBanner.classList.add('hidden');
+    optimizationStatsBanner.classList.remove('flex');
 }
 
 removeFileBtn.addEventListener('click', (e) => {
@@ -157,6 +172,8 @@ removeFileBtn.addEventListener('click', (e) => {
     stagedFileInfo.classList.remove('flex');
     btnBuild.disabled = true;
     btnBuild.classList.add('opacity-40', 'cursor-not-allowed');
+    optimizationStatsBanner.classList.add('hidden');
+    optimizationStatsBanner.classList.remove('flex');
 });
 
 btnSelectAll.addEventListener('click', () => {
@@ -167,6 +184,101 @@ btnSelectAll.addEventListener('click', () => {
     }
     renderNetworkChips();
 });
+
+// Texture Optimizer Interactivity
+function updateLossyQualityHint(val: number) {
+    lossyQualityValue.textContent = `${val}%`;
+    if (val >= 85) {
+        lossyQualityHint.textContent = '(Giữ chi tiết tối đa)';
+        lossyQualityHint.className = 'text-[10px] text-emerald-400 font-mono';
+    } else if (val >= 70) {
+        lossyQualityHint.textContent = '(Cân bằng khuyên dùng)';
+        lossyQualityHint.className = 'text-[10px] text-cyan-400 font-mono';
+    } else if (val >= 50) {
+        lossyQualityHint.textContent = '(Nén cao)';
+        lossyQualityHint.className = 'text-[10px] text-amber-400 font-mono';
+    } else {
+        lossyQualityHint.textContent = '(Nén cực mạnh)';
+        lossyQualityHint.className = 'text-[10px] text-rose-400 font-mono';
+    }
+}
+
+function updateLosslessLevelHint(val: number) {
+    let label = `Level ${val}`;
+    if (val === 0) label += ' (Tắt)';
+    else if (val <= 2) label += ' (Nhanh / Tiêu chuẩn)';
+    else if (val <= 4) label += ' (Cân bằng)';
+    else label += ' (Nén Max)';
+    losslessLevelValue.textContent = label;
+}
+
+function updateOptimizerVisibility() {
+    if (toggleOptimizePng.checked) {
+        optimizerControls.classList.remove('hidden');
+        optimizerStatusSubtitle.textContent = 'Nén ảnh PNG giảm 50-80% dung lượng bản build';
+        optimizerStatusSubtitle.className = 'text-[11px] text-slate-400';
+    } else {
+        optimizerControls.classList.add('hidden');
+        optimizerStatusSubtitle.textContent = 'Đã tắt nén texture (Giữ nguyên ảnh gốc)';
+        optimizerStatusSubtitle.className = 'text-[11px] text-amber-400/80 font-medium';
+    }
+}
+
+toggleOptimizePng.addEventListener('change', updateOptimizerVisibility);
+optimizerHeader.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('label')) return;
+    toggleOptimizePng.checked = !toggleOptimizePng.checked;
+    updateOptimizerVisibility();
+});
+
+lossyQualitySlider.addEventListener('input', () => {
+    updateLossyQualityHint(parseInt(lossyQualitySlider.value, 10));
+});
+
+losslessLevelSlider.addEventListener('input', () => {
+    updateLosslessLevelHint(parseInt(losslessLevelSlider.value, 10));
+});
+
+async function optimizeZipTextures(
+    buffer: ArrayBuffer,
+    lossyQuality: string,
+    losslessLevel: string
+): Promise<ArrayBuffer> {
+    try {
+        const response = await fetch(`/api/optimize-zip?lossy=${lossyQuality}&lossless=${losslessLevel}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/octet-stream' },
+            body: buffer,
+        });
+
+        if (!response.ok) {
+            console.warn('[Playfuse Optimizer] Server returned status', response.status);
+            return buffer;
+        }
+
+        const statsHeader = response.headers.get('X-Playfuse-Stats');
+        if (statsHeader) {
+            try {
+                const stats = JSON.parse(statsHeader);
+                if (stats && stats.fileCount > 0 && stats.savedBytes > 0) {
+                    optimizationStatsBanner.classList.remove('hidden');
+                    optimizationStatsBanner.classList.add('flex');
+                    const origStr = formatBytes(stats.totalOriginalBytes);
+                    const optStr = formatBytes(stats.totalOptimizedBytes);
+                    const pct = stats.savingsPercent.toFixed(1);
+                    optimizationStatsText.textContent = `Đã nén ${stats.fileCount} ảnh PNG: ${origStr} → ${optStr} (-${pct}%)`;
+                }
+            } catch (err) {
+                console.error('[Playfuse] Error parsing X-Playfuse-Stats', err);
+            }
+        }
+
+        return await response.arrayBuffer();
+    } catch (err) {
+        console.warn('[Playfuse] Optimizer network error, proceeding with uncompressed zip:', err);
+        return buffer;
+    }
+}
 
 // Build Action
 btnBuild.addEventListener('click', async () => {
@@ -180,7 +292,21 @@ btnBuild.addEventListener('click', async () => {
     progressStep.textContent = 'Reading archive buffer...';
 
     try {
-        const buffer = await stagedFile.arrayBuffer();
+        let buffer = await stagedFile.arrayBuffer();
+
+        // Texture Optimization (if enabled)
+        if (toggleOptimizePng.checked) {
+            progressBar.style.width = '15%';
+            progressPercent.textContent = '15%';
+            progressStep.textContent = 'Tối ưu hoá texture với tiny-png (Rust)...';
+
+            buffer = await optimizeZipTextures(
+                buffer,
+                lossyQualitySlider.value,
+                losslessLevelSlider.value
+            );
+        }
+
         const networkString = Array.from(selectedNetworks).join(',');
 
         const outputs = await workerClient.pack(

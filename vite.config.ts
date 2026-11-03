@@ -1,5 +1,8 @@
 import { defineConfig, type Plugin } from 'vite';
 import os from 'node:os';
+import { unzipSync, zipSync } from 'fflate';
+import { VirtualFS } from './src/core/vfs.js';
+import { TinyPngOptimizer } from './src/node/optimizer.js';
 
 function lanPreviewPlugin(): Plugin {
   const previewStorage = new Map<string, string>();
@@ -85,6 +88,54 @@ function lanPreviewPlugin(): Plugin {
         }
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ ip: lanIp, port: 5174 }));
+      });
+
+      // 4. API Tối ưu hoá Texture qua Rust tiny-png
+      server.middlewares.use('/api/optimize-zip', (req, res) => {
+        if (req.method === 'POST') {
+          const url = new URL(req.url || '', 'http://localhost');
+          const lossyQuality = url.searchParams.get('lossy') || '80';
+          const losslessLevel = Number(url.searchParams.get('lossless') || '2');
+
+          const chunks: Buffer[] = [];
+          req.on('data', chunk => chunks.push(chunk));
+          req.on('end', async () => {
+            try {
+              const zipBuffer = Buffer.concat(chunks);
+              const entries = unzipSync(new Uint8Array(zipBuffer));
+              const vfsEntries: [string, Uint8Array][] = [];
+              for (const path in entries) {
+                if (!path.endsWith('/') && !path.includes('.DS_Store') && !path.includes('__MACOSX')) {
+                  vfsEntries.push([path, entries[path]!]);
+                }
+              }
+              const vfs = VirtualFS.fromEntries(vfsEntries);
+              const optimizer = new TinyPngOptimizer();
+              const stats = await optimizer.optimize(vfs, {
+                lossyQuality,
+                losslessLevel,
+              });
+
+              const updatedFiles: Record<string, Uint8Array> = {};
+              for (const p of vfs.list()) {
+                updatedFiles[p] = vfs.get(p)!;
+              }
+              const optimizedZip = zipSync(updatedFiles);
+
+              res.setHeader('Content-Type', 'application/octet-stream');
+              res.setHeader('X-Playfuse-Stats', JSON.stringify(stats));
+              res.setHeader('Access-Control-Expose-Headers', 'X-Playfuse-Stats');
+              res.end(Buffer.from(optimizedZip));
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else {
+          res.statusCode = 405;
+          res.end();
+        }
       });
     },
   };
